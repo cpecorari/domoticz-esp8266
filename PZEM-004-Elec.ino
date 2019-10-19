@@ -29,7 +29,6 @@ const int   port = 8080;
 String authUsername = "xxx";
 String authPassword = "xxx";
 const int   watchdog = 120000; // Frequency of sending data to Domoticz -- 120000 is enough !
-unsigned long previousMillis = millis();
 HTTPClient http;
 
 PZEM004Tv30 pzem(3, 1);           // Attach PZEM to hwserial
@@ -105,7 +104,7 @@ void loop ()
 
   Debug.handle();
 
-  delay(10000);
+  delay(watchdog);
 
 }
 
