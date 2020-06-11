@@ -1,7 +1,7 @@
 # domoticz-esp8266
 ESP8266 codes for sending sensor values to Domoticz
 
-Don't forget to configure your wifi, and Domoticz has to be configured in "Basic-Auth".
+Don't forget to configure your wifi, and Domoticz has to be configured in "Basic-Auth" or avoid auth from local IPs.
 
 ```
 // WiFi parameters to be configured
