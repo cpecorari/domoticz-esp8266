@@ -9,6 +9,8 @@ Cheerz
 #include <PZEM004Tv30.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#define ARDUINOJSON_DECODE_UNICODE 1
+#include <ArduinoJson.h>
 #include "base64.h"
 
 #include "RemoteDebug.h"  //https://github.com/JoaoLopesF/RemoteDebug -- Wifi debug helps a lot !!
@@ -21,14 +23,14 @@ Cheerz
 #define HOST_NAME "pecodebug"
 
 // WiFi parameters to be configured
-const char* ssid = "xxx";
-const char* password = "xxx";
+const char* ssid = "Cocos";
+const char* password = "1237894560peco";
 
-const char* host = "192.168.1.NN";
+const char* host = "192.168.1.40";
 const int   port = 8080;
-String authUsername = "xxx";
-String authPassword = "xxx";
-const int   watchdog = 120000; // Frequency of sending data to Domoticz -- 120000 is enough !
+String authUsername = "Comino";
+String authPassword = "pecorar1";
+const int   watchdog = 60000; // Frequency for sending data to Domoticz -- 60000 is enough (1 minute), could be less
 HTTPClient http;
 
 PZEM004Tv30 pzem(3, 1);           // Attach PZEM to hwserial
@@ -51,6 +53,7 @@ void setup ()
   while (WiFi.status() != WL_CONNECTED) {
      delay(500);
   }
+  debugA("WiFi connected");
 
   String hostNameWifi = HOST_NAME;
   hostNameWifi.concat(".local");
@@ -86,13 +89,20 @@ void loop ()
   if(e >= 0.0){e_=e;}
   debugA("e_ value : %f", e);
 
-   // My ids in DOMOTICZ : id WL1 = 428 for conso & power // 454 for Voltage ---> Still don't know how to choose IDs in Domoticz... So change it here when you created your dummy device in Domoticz !
+   // My ids in DOMOTICZ : id WL1 = 428 for conso & power // 454 for Voltage ---> Still don't know how to choose IDs in Domoticz...
+   // So change it here when you created your dummy device in Domoticz !
    // (My colors to remember) DONT FORGET to 'invert' TX and RX between PZEM and ESP8266 == BORDEAUX = VDD // JAUNE = GND // bleu RX // vert TX
   if(WiFi.status() == WL_CONNECTED) {
-    String url = "/json.htm?type=command&param=udevice&idx=454&nvalue=0&svalue=";
-    url.concat(v_);
+    String nameIdx = "PowerElec";
+    int idx = 34;//getIdx(nameIdx);
+    String url = "/json.htm?type=command&param=udevice&idx=" + String(idx) + "&nvalue=0&svalue=" + String(p_) + ";" + String(e_);
+    if(idx > 0) 
+    {
+      sendDomoticz(url);
+    }
     debugA("v_ value : %f", v_);
     debugA("URL Sent : %s", url.c_str());
+    /**    
     sendDomoticz(url);
     delay(500);
     String url2 = "/json.htm?type=command&param=udevice&idx=428&nvalue=0&svalue="; 
@@ -100,13 +110,58 @@ void loop ()
     url2.concat(";");
     url2.concat(e_);
     sendDomoticz(url2);
+    **/
   }
 
   Debug.handle();
 
   delay(watchdog);
-
 }
+
+int getIdx(String idxName){
+  DynamicJsonDocument jsonDoc(20480);
+  // 20480 Should be enough for about 20 favorite devices in Domoticz (around 1024 per device), go to https://arduinojson.org/v6/assistant/
+  debugA("Getting idx for name : %s", idxName.c_str());
+  String url = "/json.htm?type=devices&used=true&filter=all&favorite=1"; // To get favorites devices in Domoticz, refer to doc to filter
+  debugA("Requesting URL: %s", url.c_str());
+  http.begin(host,port,url);
+  String auth = base64::encode(authUsername + ":" + authPassword);
+  http.addHeader("Authorization", "Basic " + auth);
+  int httpCode = http.GET();
+    if (httpCode) {
+      if (httpCode == 200) {
+        String payload = http.getString();
+        debugA("Domoticz get Json response %s", payload.c_str()); 
+        DeserializationError err = deserializeJson(jsonDoc, payload);
+        if (err) {
+          debugA("deserializeJson() failed with code %s", err.c_str());
+        }
+        JsonArray arr = jsonDoc["result"].as<JsonArray>();
+        for (JsonObject repo : arr) {
+          const String searchName = repo["Name"];
+          debugA("Entry in Json : %s", searchName.c_str());
+          if(searchName == idxName)
+          {
+            debugA("FOUND Name idx : %d", repo);
+            http.end();
+            return repo["idx"];
+          }
+        }
+        debugA("Did not find any suitable device...");
+        http.end();
+        return 0;
+      }
+      else{
+        debugA("Domoticz request error..."); 
+        http.end();
+        return 0;
+      }
+    }
+  debugA("closing connection");
+  http.end();
+  return 0;
+}
+
 
 void sendDomoticz(String url){
   
