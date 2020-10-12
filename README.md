@@ -15,7 +15,7 @@ String authPassword = "xxx";        // Your Domoticz Password
 ```
 
 ## For Electric Version
-My ids in DOMOTICZ : id WL1 = 428 for conso & power // 454 for Voltage ---> Still don't know how to choose IDs in Domoticz... So change it here when you created your dummy device in Domoticz !
+Ids in Domoticz : Now finding id from its name in Domoticz, don't forget to change your name in code or in Domoticz to find it !
 
 My colors to remember, BORDEAUX = VDD (5v in nodeMcu) // JAUNE = GND // bleu RX // vert TX
 DONT FORGET to 'invert' TX and RX between PZEM and ESP8266
