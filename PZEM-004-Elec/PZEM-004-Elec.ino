@@ -23,13 +23,13 @@ Cheerz
 #define HOST_NAME "pecodebug"
 
 // WiFi parameters to be configured
-const char* ssid = "Cocos";
-const char* password = "1237894560peco";
+const char* ssid = "xxxxxxxx";
+const char* password = "xxxxxxxxxxxx";
 
 const char* host = "192.168.1.40";
 const int   port = 8080;
 String authUsername = "Comino";
-String authPassword = "pecorar1";
+String authPassword = "xxxxxxxx";
 const int   watchdog = 60000; // Frequency for sending data to Domoticz -- 60000 is enough (1 minute), could be less
 HTTPClient http;
 
